@@ -415,7 +415,6 @@ function renderBoard(){
 }
 
 /* ======================= QUESTION FLOW ======================= */
-let stealActive = false;
 
 function openQuestion(colIdx, qIdx){
   if(onlineMode){
