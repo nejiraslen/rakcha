@@ -113,6 +113,10 @@ function handleWsMessage(data){
     applyRoomState(data.roomState);
     return;
   }
+  if(data.type === 'answerFeedback'){
+    handleOnlineAnswerFeedback(data.feedback);
+    return;
+  }
   if(data.type === 'error'){
     setOnlineError(data.message || 'حدث خطأ');
     return;
@@ -206,6 +210,10 @@ function openOnlineQuestionModal(questionState){
   document.getElementById('qAnswer').textContent = questionState.answer;
   document.getElementById('qTurn').textContent = 'دور ' + teamNames[turn];
   document.getElementById('qTurn').className = 'q-turn ' + (turn===0 ? 'teamA' : 'teamB');
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerFeedback').textContent = '';
+  document.getElementById('answerBox').classList.add('hidden');
+  document.getElementById('showAnswerBtn').classList.remove('hidden');
   if(questionState.revealed){
     document.getElementById('answerBox').classList.remove('hidden');
     document.getElementById('showAnswerBtn').classList.add('hidden');
@@ -220,6 +228,19 @@ function openOnlineQuestionModal(questionState){
     document.getElementById('stealTag').textContent = `فرصة سرقة لفريق: ${teamNames[otherTeam]} 🎯`;
   }
   document.getElementById('qModal').classList.remove('hidden');
+}
+
+function handleOnlineAnswerFeedback(feedback){
+  if(!feedback) return;
+  const feedbackEl = document.getElementById('answerFeedback');
+  feedbackEl.textContent = feedback.message || '';
+  if(feedback.correct){
+    document.getElementById('answerBox').classList.remove('hidden');
+    document.getElementById('showAnswerBtn').classList.add('hidden');
+  }
+  if(feedback.correct && feedback.answer){
+    document.getElementById('qAnswer').textContent = feedback.answer;
+  }
 }
 
 function sendWs(payload){
@@ -437,11 +458,83 @@ function openQuestion(colIdx, qIdx){
   document.getElementById('qAnswer').textContent = q.a;
   document.getElementById('qTurn').textContent = 'دور ' + teamNames[turn];
   document.getElementById('qTurn').className = 'q-turn ' + (turn===0 ? 'teamA' : 'teamB');
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerFeedback').textContent = '';
   document.getElementById('answerBox').classList.add('hidden');
   document.getElementById('showAnswerBtn').classList.remove('hidden');
   document.getElementById('judgeWrap').classList.add('hidden');
   document.getElementById('stealWrap').classList.add('hidden');
   document.getElementById('qModal').classList.remove('hidden');
+}
+
+function normalizeText(text){
+  if(!text) return '';
+  const stripped = text.replace(/[ -]/g, ' ');
+  const noDiacritics = stripped.replace(/[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]/g, '');
+  const clean = noDiacritics
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  return clean;
+}function isAnswerApproximate(guess, answer){
+  const cleanGuess = normalizeText(guess);
+  const cleanAnswer = normalizeText(answer);
+  if(!cleanGuess || !cleanAnswer) return false;
+  if(cleanGuess === cleanAnswer) return true;
+  if(cleanAnswer.includes(cleanGuess) || cleanGuess.includes(cleanAnswer)) return true;
+  const guessWords = cleanGuess.split(' ');
+  const answerWords = cleanAnswer.split(' ');
+  const shared = answerWords.filter(word=> word && guessWords.includes(word)).length;
+  if(shared >= Math.max(1, Math.ceil(answerWords.length * 0.6))) return true;
+  if(answerWords.length >= 2 && shared >= Math.max(1, Math.ceil(answerWords.length * 0.5))) return true;
+  const guessNumber = (guess.match(/\d+/g) || []).join('');
+  const answerNumber = (answer.match(/\d+/g) || []).join('');
+  if(guessNumber && answerNumber && guessNumber === answerNumber) return true;
+  return false;
+}
+
+function submitAnswer(){
+  const guess = document.getElementById('answerInput').value.trim();
+  if(!guess){
+    document.getElementById('answerFeedback').textContent = 'اكتب إجابتك أولاً.';
+    return;
+  }
+  if(onlineMode){
+    sendWs({ type:'submitAnswer', answer: guess });
+    document.getElementById('answerFeedback').textContent = 'جاري التحقق...';
+    return;
+  }
+  const {colIdx, qIdx} = currentCell;
+  const q = boardCats[colIdx].questions[qIdx];
+  const otherTeam = 1 - turn;
+  const correct = isAnswerApproximate(guess, q.a);
+  if(!stealActive){
+    if(correct){
+      scores[turn] += POINTS[q.d];
+      document.getElementById('answerFeedback').textContent = `إجابة صحيحة! حصل ${teamNames[turn]} على ${POINTS[q.d]} نقطة.`;
+      document.getElementById('answerBox').classList.remove('hidden');
+      document.getElementById('showAnswerBtn').classList.add('hidden');
+      setTimeout(()=> closeCell(), 1300);
+      return;
+    }
+    stealActive = true;
+    document.getElementById('answerFeedback').textContent = `إجابة خاطئة. الآن دور ${teamNames[otherTeam]} للسرقة.`;
+    document.getElementById('qTurn').textContent = 'دور ' + teamNames[otherTeam];
+    document.getElementById('qTurn').className = 'q-turn ' + (otherTeam===0 ? 'teamA' : 'teamB');
+    document.getElementById('answerInput').value = '';
+    return;
+  }
+  // steal attempt
+  if(correct){
+    scores[otherTeam] += POINTS[q.d];
+    document.getElementById('answerFeedback').textContent = `إجابة السرقة صحيحة! حصل ${teamNames[otherTeam]} على ${POINTS[q.d]} نقطة.`;
+  } else {
+    document.getElementById('answerFeedback').textContent = `إجابة السرقة خاطئة. الإجابة الصحيحة: ${q.a}`;
+  }
+  document.getElementById('answerBox').classList.remove('hidden');
+  document.getElementById('showAnswerBtn').classList.add('hidden');
+  setTimeout(()=> closeCell(), 1700);
 }
 
 function revealAnswer(){
@@ -451,7 +544,6 @@ function revealAnswer(){
   }
   document.getElementById('answerBox').classList.remove('hidden');
   document.getElementById('showAnswerBtn').classList.add('hidden');
-  document.getElementById('judgeWrap').classList.remove('hidden');
 }
 
 function closeCell(){
@@ -460,6 +552,8 @@ function closeCell(){
   const q = boardCats[colIdx].questions[qIdx];
   q.used = true;
   document.getElementById('qModal').classList.add('hidden');
+  document.getElementById('answerInput').value = '';
+  document.getElementById('answerFeedback').textContent = '';
   turn = 1 - turn;
   renderScoreboard();
   renderBoard();

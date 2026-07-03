@@ -191,6 +191,18 @@
   }
   .answer-box .lbl{ font-size:12px; color:var(--gold-soft); font-weight:700; margin-bottom:6px; }
   .answer-box .ans{ font-size:19px; font-weight:900; color:var(--gold); }
+  .answer-input{
+    display:flex; flex-direction:column; gap:8px; margin-bottom:14px;
+  }
+  .answer-input input{
+    width:100%; border-radius:14px; border:1px solid rgba(240,180,41,.35);
+    background:rgba(240,180,41,.08); color:var(--ink); padding:14px 16px; font-size:16px;
+    outline:none;
+  }
+  .answer-feedback{
+    min-height:26px; color:var(--ink-soft); font-size:14px; line-height:1.4;
+    text-align:center; margin-top:4px;
+  }
   .modal-actions{ display:flex; flex-direction:column; gap:10px; }
   .row2{ display:flex; gap:10px; }
   .btn.correct{ background:var(--teamA); box-shadow:0 6px 0 var(--teamA-deep), 0 10px 18px rgba(0,0,0,.35); flex:1; }
@@ -393,7 +405,13 @@
     <div class="q-turn" id="qTurn">دور الفريق الأول</div>
     <div class="q-text" id="qText"></div>
     <div id="answerWrap">
+      <div class="answer-input">
+        <label class="lbl">أدخل الإجابة</label>
+        <input id="answerInput" type="text" placeholder="اكتب إجابتك هنا...">
+      </div>
+      <button id="submitAnswerBtn" class="btn full" onclick="submitAnswer()">إرسال الإجابة</button>
       <button id="showAnswerBtn" class="btn ghost full" onclick="revealAnswer()">إظهار الإجابة</button>
+      <div class="answer-feedback" id="answerFeedback"></div>
       <div id="answerBox" class="answer-box hidden">
         <div class="lbl">الإجابة الصحيحة</div>
         <div class="ans" id="qAnswer"></div>
