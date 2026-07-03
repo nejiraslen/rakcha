@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>تحدي الفرق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0D1A;
+    --bg-2:#12162B;
+    --panel:#171B33;
+    --line:rgba(240,180,41,0.16);
+    --gold:#F0B429;
+    --gold-soft:#F7D583;
+    --ink:#F5F3ED;
+    --ink-dim:#9AA0C0;
+    --teamA:#2DD4BF;
+    --teamA-deep:#0F5C54;
+    --teamB:#FB7185;
+    --teamB-deep:#7A1F30;
+    --wrong:#5B4636;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Tajawal',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1B2144 0%, var(--bg) 60%),
+      var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .screen{ min-height:100vh; display:flex; flex-direction:column; padding:20px 16px 32px; animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .hidden{ display:none !important; }
+
+  /* ---------- Top brand ---------- */
+  .brand{ text-align:center; margin-bottom:6px; }
+  .brand .mark{ font-size:13px; letter-spacing:4px; color:var(--gold); font-weight:700; }
+  .brand h1{ font-size:30px; font-weight:900; margin:4px 0 0; }
+  .brand .sub{ color:var(--ink-dim); font-size:14px; margin-top:4px; }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    border:none; cursor:pointer; font-family:inherit; font-weight:800; font-size:16px;
+    border-radius:14px; padding:14px 20px; color:var(--bg); background:var(--gold);
+    box-shadow:0 6px 0 #b7811a, 0 10px 18px rgba(0,0,0,.35);
+    transition:transform .08s ease;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #b7811a, 0 4px 10px rgba(0,0,0,.3); }
+  .btn.ghost{ background:transparent; color:var(--gold); border:2px solid var(--line); box-shadow:none; }
+  .btn.ghost:active{ transform:translateY(2px); }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; box-shadow:none; transform:none; }
+  .btn.full{ width:100%; }
+  .btn.small{ padding:10px 16px; font-size:14px; }
+  .btn.session-btn{ 
+    min-width:52px; min-height:52px; padding:10px; font-size:20px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .btn.session-btn.selected{ 
+    background:var(--teamA); box-shadow:0 4px 0 var(--teamA-deep), 0 6px 12px rgba(0,0,0,.35);
+  }
+  .btn.session-btn:disabled{ opacity:.25; }
+
+  /* ---------- Category picker ---------- */
+  .picker-head{ display:flex; align-items:baseline; justify-content:space-between; margin:18px 2px 12px; }
+  .picker-count{ font-weight:900; font-size:15px; color:var(--gold); }
+  .cat-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px; flex:1;
+  }
+  .cat-card{
+    background:var(--panel); border:2px solid var(--line); border-radius:16px;
+    padding:14px 10px; text-align:center; cursor:pointer; user-select:none;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    transition:border-color .15s, background .15s, transform .08s;
+  }
+  .cat-card .icon{ font-size:26px; }
+  .cat-card .name{ font-size:13.5px; font-weight:700; line-height:1.3; }
+  .cat-card.selected{ border-color:var(--gold); background:linear-gradient(180deg, rgba(240,180,41,.14), rgba(240,180,41,.04)); }
+  .cat-card.selected::after{ content:"\2713"; position:absolute; }
+  .cat-card:active{ transform:scale(.97); }
+  .cat-card{ position:relative; }
+  .cat-card .badge{
+    position:absolute; top:6px; left:6px; width:20px; height:20px; border-radius:50%;
+    background:var(--gold); color:var(--bg); font-size:12px; font-weight:900;
+    display:flex; align-items:center; justify-content:center; opacity:0;
+  }
+  .cat-card.selected .badge{ opacity:1; }
+  .footer-bar{ position:sticky; bottom:0; padding-top:14px; }
+
+  /* ---------- Session picker ---------- */
+  .session-grid{ display:flex; flex-direction:column; gap:12px; flex:1; }
+  .session-row{
+    background:var(--panel); border:2px solid var(--line); border-radius:16px;
+    padding:14px; display:flex; align-items:center; gap:10px;
+  }
+  .session-row .cat-info{ flex:1; display:flex; align-items:center; gap:10px; }
+  .session-row .cat-icon{ font-size:28px; }
+  .session-row .cat-name{ font-size:15px; font-weight:800; }
+  .session-row .session-btns{ display:flex; gap:6px; }
+  .session-row.done{ border-color:rgba(45,212,191,.4); }
+  .session-row.done .cat-name{ color:var(--teamA); }
+
+  /* ---------- Team setup ---------- */
+  .team-form{ display:flex; flex-direction:column; gap:16px; margin-top:24px; }
+  .team-input{
+    border-radius:16px; padding:16px; border:2px solid var(--line); background:var(--panel);
+  }
+  .team-input.teamA{ border-color:var(--teamA); }
+  .team-input.teamB{ border-color:var(--teamB); }
+  .team-input label{ display:block; font-size:13px; color:var(--ink-dim); margin-bottom:8px; font-weight:700; }
+  .team-input input{
+    width:100%; background:transparent; border:none; outline:none; color:var(--ink);
+    font-family:inherit; font-size:19px; font-weight:800; padding:2px 0;
+  }
+  .diff-note{ text-align:center; color:var(--ink-dim); font-size:13px; margin-top:18px; line-height:1.7; }
+  .diff-note b{ color:var(--gold-soft); }
+
+  /* ---------- Scoreboard ---------- */
+  .scoreboard{ display:flex; gap:10px; align-items:center; margin-bottom:16px; }
+  .score-card{
+    flex:1; border-radius:16px; padding:12px 14px; background:var(--panel);
+    border:2px solid var(--line); position:relative; overflow:hidden;
+  }
+  .score-card.active{ box-shadow:0 0 0 2px var(--gold) inset; }
+  .score-card .turn-tag{
+    position:absolute; top:-1px; left:0; right:0; text-align:center; font-size:10.5px; font-weight:900;
+    letter-spacing:1px; color:var(--bg); background:var(--gold); padding:2px 0; opacity:0;
+  }
+  .score-card.active .turn-tag{ opacity:1; }
+  .score-card .tname{ font-size:13px; color:var(--ink-dim); font-weight:700; margin-top:10px; }
+  .score-card .tscore{ font-size:26px; font-weight:900; }
+  .score-card.teamA .tscore{ color:var(--teamA); }
+  .score-card.teamB .tscore{ color:var(--teamB); }
+  .vs{ font-weight:900; color:var(--ink-dim); font-size:13px; }
+
+  /* ---------- Board ---------- */
+  .board-wrap{ flex:1; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .board{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(94px,1fr); gap:8px; min-width:max-content; padding-bottom:6px; }
+  .board-col{ display:flex; flex-direction:column; gap:8px; }
+  .col-head{
+    background:linear-gradient(180deg,#1E2242,#171B33); border:1px solid var(--line); border-radius:12px;
+    padding:8px 4px; text-align:center; min-height:64px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  }
+  .col-head .icon{ font-size:20px; }
+  .col-head .name{ font-size:11px; font-weight:800; line-height:1.25; }
+  .cell{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 4px;
+    text-align:center; cursor:pointer; font-weight:900; font-size:16px; color:var(--gold-soft);
+    min-height:52px; display:flex; align-items:center; justify-content:center;
+    transition:transform .08s;
+  }
+  .cell.easy{ color:#8CE0C4; }
+  .cell.medium{ color:var(--gold-soft); }
+  .cell.hard{ color:#FFA6A6; }
+  .cell:active{ transform:scale(.94); }
+  .cell.used{
+    background:transparent; border-style:dashed; color:var(--ink-dim); opacity:.35; cursor:default; font-size:13px;
+  }
+  .cell.used:active{ transform:none; }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(6,7,16,.72); backdrop-filter:blur(3px);
+    display:flex; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .modal{
+    width:100%; max-width:480px; background:var(--bg-2); border-radius:22px 22px 0 0;
+    border-top:2px solid var(--gold); padding:22px 20px 28px; max-height:88vh; overflow-y:auto;
+    animation:slideUp .28s cubic-bezier(.2,.9,.3,1.2);
+  }
+  @keyframes slideUp{ from{ transform:translateY(100%);} to{ transform:translateY(0);} }
+  .modal-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .q-cat{ display:flex; align-items:center; gap:8px; font-weight:800; color:var(--ink-dim); font-size:13.5px; }
+  .q-points{
+    font-weight:900; font-size:14px; color:var(--bg); background:var(--gold); border-radius:999px; padding:4px 14px;
+  }
+  .q-turn{ text-align:center; font-weight:900; font-size:13px; margin:6px 0 14px; padding:6px; border-radius:10px; }
+  .q-turn.teamA{ color:var(--teamA); background:rgba(45,212,191,.1); }
+  .q-turn.teamB{ color:var(--teamB); background:rgba(251,113,133,.1); }
+  .q-turn.steal-tag{ color:var(--gold); background:rgba(240,180,41,.12); }
+  .q-text{ font-size:20px; font-weight:800; line-height:1.6; margin:8px 0 18px; }
+  .answer-box{
+    background:rgba(240,180,41,.08); border:1.5px dashed var(--gold); border-radius:14px;
+    padding:16px; text-align:center; margin-bottom:18px;
+  }
+  .answer-box .lbl{ font-size:12px; color:var(--gold-soft); font-weight:700; margin-bottom:6px; }
+  .answer-box .ans{ font-size:19px; font-weight:900; color:var(--gold); }
+  .modal-actions{ display:flex; flex-direction:column; gap:10px; }
+  .row2{ display:flex; gap:10px; }
+  .btn.correct{ background:var(--teamA); box-shadow:0 6px 0 var(--teamA-deep), 0 10px 18px rgba(0,0,0,.35); flex:1; }
+  .btn.wrong{ background:var(--teamB); box-shadow:0 6px 0 var(--teamB-deep), 0 10px 18px rgba(0,0,0,.35); flex:1; }
+
+  /* ---------- Results ---------- */
+  .results{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .trophy{ font-size:64px; margin-bottom:10px; }
+  .results h2{ font-size:26px; font-weight:900; margin:0 0 6px; }
+  .results .winner-name{ color:var(--gold); }
+  .final-scores{ display:flex; gap:14px; margin:26px 0; }
+  .final-card{ background:var(--panel); border-radius:18px; padding:20px 26px; border:2px solid var(--line); }
+  .final-card .n{ font-size:14px; color:var(--ink-dim); font-weight:700; }
+  .final-card .s{ font-size:32px; font-weight:900; margin-top:4px; }
+  .final-card.teamA .s{ color:var(--teamA); }
+  .final-card.teamB .s{ color:var(--teamB); }
+
+  .top-actions{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .link-btn{ background:none; border:none; color:var(--ink-dim); font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; padding:6px; }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar{ width:6px; height:6px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:rgba(240,180,41,.3); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== SCREEN HOME ===================== -->
+<div id="screen-home" class="screen">
+  <div class="brand">
+    <div class="mark">لعبة الفرق</div>
+    <h1>اختر نمط اللعب</h1>
+    <div class="sub">العب محلياً أو اربط خصم عبر الإنترنت</div>
+  </div>
+  <div class="footer-bar" style="display:grid; gap:12px;">
+    <button class="btn full" onclick="startLocalMode()">اللعب المحلي</button>
+    <button class="btn full" onclick="startOnlineMode()">اللعب عبر الإنترنت</button>
+  </div>
+  <div class="diff-note" style="margin-top:18px; text-align:center;">
+    تم تجهيز هذا المشروع للاستضافة على Render باستخدام خادم Node.js، مع مطابقة لاعبين عبر الإنترنت وجلسة لعب مشتركة.
+  </div>
+</div>
+
+<!-- ===================== SCREEN ONLINE SETUP ===================== -->
+<div id="screen-online" class="screen hidden">
+  <div class="top-actions">
+    <button class="link-btn" onclick="goTo('home')">&larr; رجوع</button>
+  </div>
+  <div class="brand">
+    <div class="mark">اللعب عبر الإنترنت</div>
+    <h1>أنشئ غرفة أو انضم إلى أحدها</h1>
+    <div class="sub">سيتم مطابقة لاعبين للعب معاً على نفس اللوحة.</div>
+  </div>
+  <div class="team-form">
+    <div class="team-input">
+      <label>اسم فريقك</label>
+      <input id="onlinePlayerName" type="text" maxlength="16" placeholder="اسمك هنا">
+    </div>
+    <div class="team-input">
+      <label>رمز الغرفة</label>
+      <input id="onlineRoomCode" type="text" maxlength="6" placeholder="مثلاً A1B2C3">
+    </div>
+  </div>
+  <div class="footer-bar" style="display:grid; gap:10px;">
+    <button class="btn full" onclick="createOnlineRoom()">إنشاء غرفة</button>
+    <button class="btn full ghost" onclick="joinOnlineRoom()">الانضمام إلى غرفة</button>
+  </div>
+  <div class="diff-note" style="margin-top:14px;" id="onlineError"></div>
+</div>
+
+<!-- ===================== SCREEN ONLINE WAITING ===================== -->
+<div id="screen-online-waiting" class="screen hidden">
+  <div class="top-actions">
+    <button class="link-btn" onclick="leaveOnlineRoom()">&larr; الرجوع</button>
+  </div>
+  <div class="brand">
+    <div class="mark">جاهز للربط</div>
+    <h1>رمز الغرفة</h1>
+    <div class="sub" id="onlineStatus">في انتظار لاعب آخر للانضمام...</div>
+  </div>
+  <div class="cat-card" style="padding:18px; margin:0 auto 16px; max-width:420px; text-align:center; background:var(--panel); border-color:var(--line);">
+    <div style="font-size:18px;font-weight:900;" id="roomCodeLabel">-</div>
+  </div>
+  <div id="onlinePlayersList" style="max-width:480px; margin:0 auto; display:grid; gap:10px;"></div>
+</div>
+
+<!-- ===================== SCREEN 1: CATEGORY PICKER ===================== -->
+<div id="screen-picker" class="screen hidden">
+  <div class="brand">
+    <div class="mark">لعبة الفرق</div>
+    <h1>اختاروا 6 فئات</h1>
+    <div class="sub">60 فئة متاحة — اضغطوا لاختيار 6 للعب</div>
+  </div>
+  <div class="picker-head">
+    <span></span>
+    <span class="picker-count"><span id="pickCount">0</span> / 6 مُختارة</span>
+  </div>
+  <div id="catGrid" class="cat-grid"></div>
+  <div class="footer-bar">
+    <button id="toSessions" class="btn full" disabled>التالي: اختيار الجلسات</button>
+  </div>
+</div>
+
+<!-- ===================== SCREEN 2: SESSION PICKER ===================== -->
+<div id="screen-sessions" class="screen hidden">
+  <div class="top-actions">
+    <button class="link-btn" onclick="goTo('picker')">&larr; رجوع لاختيار الفئات</button>
+  </div>
+  <div class="brand">
+    <div class="mark">لعبة الفرق</div>
+    <h1>اختاروا الجلسة لكل فئة</h1>
+    <div class="sub">كل رقم = 6 أسئلة جديدة (2 سهلة + 2 متوسطة + 2 صعبة)</div>
+  </div>
+  <div id="sessionGrid" class="session-grid"></div>
+  <div class="footer-bar">
+    <button id="toTeams" class="btn full" disabled>التالي: أسماء الفرق</button>
+  </div>
+</div>
+
+<!-- ===================== SCREEN 3: TEAM SETUP ===================== -->
+<div id="screen-teams" class="screen hidden">
+  <div class="top-actions">
+    <button class="link-btn" onclick="goTo('sessions')">&larr; رجوع لاختيار الجلسات</button>
+  </div>
+  <div class="brand">
+    <div class="mark">لعبة الفرق</div>
+    <h1>جهّزوا الفريقين</h1>
+    <div class="sub">أدخلوا أسماء الفرق ثم ابدأوا اللعب</div>
+  </div>
+  <div class="team-form">
+    <div class="team-input teamA">
+      <label>اسم الفريق الأول</label>
+      <input id="teamAName" type="text" placeholder="الفريق الأول" maxlength="18">
+    </div>
+    <div class="team-input teamB">
+      <label>اسم الفريق الثاني</label>
+      <input id="teamBName" type="text" placeholder="الفريق الثاني" maxlength="18">
+    </div>
+  </div>
+  <div class="diff-note">
+    كل فئة فيها 6 أسئلة: <b>سهل = 100</b> نقطة، <b>متوسط = 200</b> نقطة، <b>صعب = 300</b> نقطة.<br>
+    الأدوار بالتناوب بين الفريقين — كل فريق يختار سؤالاً في دوره.
+  </div>
+  <div class="footer-bar">
+    <button id="startGame" class="btn full">ابدأ اللعبة 🎮</button>
+  </div>
+</div>
+
+<!-- ===================== SCREEN 4: BOARD ===================== -->
+<div id="screen-board" class="screen hidden">
+  <div class="top-actions">
+    <span class="mark" style="font-size:11px;letter-spacing:3px;">لعبة الفرق</span>
+    <button class="link-btn" onclick="confirmRestart()">إعادة البدء</button>
+  </div>
+  <div class="scoreboard">
+    <div id="cardA" class="score-card teamA">
+      <div class="turn-tag">دور الفريق</div>
+      <div class="tname" id="nameA">الفريق الأول</div>
+      <div class="tscore" id="scoreA">0</div>
+    </div>
+    <div class="vs">VS</div>
+    <div id="cardB" class="score-card teamB">
+      <div class="turn-tag">دور الفريق</div>
+      <div class="tname" id="nameB">الفريق الثاني</div>
+      <div class="tscore" id="scoreB">0</div>
+    </div>
+  </div>
+  <div class="board-wrap">
+    <div id="board" class="board"></div>
+  </div>
+</div>
+
+<!-- ===================== SCREEN 5: RESULTS ===================== -->
+<div id="screen-results" class="screen hidden">
+  <div class="results">
+    <div class="trophy">🏆</div>
+    <h2 id="resultTitle">النتيجة النهائية</h2>
+    <div class="final-scores">
+      <div class="final-card teamA">
+        <div class="n" id="resNameA">الفريق الأول</div>
+        <div class="s" id="resScoreA">0</div>
+      </div>
+      <div class="final-card teamB">
+        <div class="n" id="resNameB">الفريق الثاني</div>
+        <div class="s" id="resScoreB">0</div>
+      </div>
+    </div>
+    <button class="btn full" onclick="confirmRestart()">لعبة جديدة</button>
+  </div>
+</div>
+
+<!-- ===================== QUESTION MODAL ===================== -->
+<div id="qModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="q-cat"><span id="qIcon">🎮</span><span id="qCatName"></span></div>
+      <div class="q-points" id="qPoints">100</div>
+    </div>
+    <div class="q-turn" id="qTurn">دور الفريق الأول</div>
+    <div class="q-text" id="qText"></div>
+    <div id="answerWrap">
+      <button id="showAnswerBtn" class="btn ghost full" onclick="revealAnswer()">إظهار الإجابة</button>
+      <div id="answerBox" class="answer-box hidden">
+        <div class="lbl">الإجابة الصحيحة</div>
+        <div class="ans" id="qAnswer"></div>
+      </div>
+    </div>
+    <div id="judgeWrap" class="modal-actions hidden" style="margin-top:16px;">
+      <div class="row2">
+        <button class="btn correct" onclick="judge(true)">✔ إجابة صحيحة</button>
+        <button class="btn wrong" onclick="judge(false)">✘ إجابة خاطئة</button>
+      </div>
+    </div>
+    <div id="stealWrap" class="modal-actions hidden" style="margin-top:16px;">
+      <div class="q-turn steal-tag" id="stealTag" style="margin-bottom:12px;">فرصة سرقة!</div>
+      <div class="row2">
+        <button class="btn correct" onclick="stealJudge(true)">✔ إجابة صحيحة</button>
+        <button class="btn wrong" onclick="stealJudge(false)">✘ إجابة خاطئة أيضًا</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
