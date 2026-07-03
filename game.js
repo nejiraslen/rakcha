@@ -214,7 +214,8 @@ function openOnlineQuestionModal(questionState){
   document.getElementById('answerFeedback').textContent = '';
   document.getElementById('answerBox').classList.add('hidden');
   document.getElementById('waitingForAnswer').classList.add('hidden');
-  // Determine if it's my turn
+  document.getElementById('showAnswerBtn').classList.add('hidden');
+  document.getElementById('judgeWrap').classList.add('hidden');
   const isMyTurn = (myTeamIndex === turn && !questionState.stealActive) || (myTeamIndex !== turn && questionState.stealActive);
   if(isMyTurn){
     document.getElementById('answerInput').disabled = false;
@@ -228,7 +229,6 @@ function openOnlineQuestionModal(questionState){
     document.getElementById('submitAnswerBtn').style.opacity = '0.5';
     document.getElementById('waitingForAnswer').classList.remove('hidden');
   }
-  document.getElementById('judgeWrap').classList.toggle('hidden', questionState.stealActive || !questionState.revealed);
   document.getElementById('stealWrap').classList.toggle('hidden', !questionState.stealActive);
   if(questionState.stealActive){
     const otherTeam = 1 - turn;
@@ -241,20 +241,24 @@ function handleOnlineAnswerFeedback(feedback){
   if(!feedback) return;
   const feedbackEl = document.getElementById('answerFeedback');
   feedbackEl.textContent = feedback.message || '';
-  if(feedback.correct){
-    document.getElementById('answerBox').classList.remove('hidden');
-    document.getElementById('showAnswerBtn').classList.add('hidden');
-  }
-  if(feedback.correct && feedback.answer){
+  
+  // Always show the answer in online mode (system judges, not players)
+  document.getElementById('answerBox').classList.remove('hidden');
+  document.getElementById('showAnswerBtn').classList.add('hidden');
+  
+  if(feedback.answer){
     document.getElementById('qAnswer').textContent = feedback.answer;
   }
-  // Auto-reveal answer and disable input
-  document.getElementById('answerBox').classList.remove('hidden');
+  
+  // Disable input after answer is revealed
   document.getElementById('answerInput').disabled = true;
   document.getElementById('submitAnswerBtn').disabled = true;
   document.getElementById('answerInput').style.opacity = '0.5';
   document.getElementById('submitAnswerBtn').style.opacity = '0.5';
   document.getElementById('waitingForAnswer').classList.add('hidden');
+  
+  // Hide judge buttons - system auto-judges in online mode, no manual judging
+  document.getElementById('judgeWrap').classList.add('hidden');
 }
 
 function sendWs(payload){
