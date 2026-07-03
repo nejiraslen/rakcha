@@ -75,7 +75,11 @@ function connectWebSocket(){
     return;
   }
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${protocol}://${window.location.host}`);
+  let host = window.location.host;
+  if(!host){
+    host = 'localhost:3000';
+  }
+  ws = new WebSocket(`${protocol}://${host}`);
   ws.onopen = ()=>{
     if(pendingOnlineRequest){
       ws.send(JSON.stringify(pendingOnlineRequest));
