@@ -245,6 +245,7 @@ function handleOnlineAnswerFeedback(feedback){
   // Always show the answer in online mode (system judges, not players)
   document.getElementById('answerBox').classList.remove('hidden');
   document.getElementById('showAnswerBtn').classList.add('hidden');
+  document.getElementById('judgeWrap').classList.add('hidden');
   
   if(feedback.answer){
     document.getElementById('qAnswer').textContent = feedback.answer;
@@ -256,9 +257,6 @@ function handleOnlineAnswerFeedback(feedback){
   document.getElementById('answerInput').style.opacity = '0.5';
   document.getElementById('submitAnswerBtn').style.opacity = '0.5';
   document.getElementById('waitingForAnswer').classList.add('hidden');
-  
-  // Hide judge buttons - system auto-judges in online mode, no manual judging
-  document.getElementById('judgeWrap').classList.add('hidden');
 }
 
 function sendWs(payload){
