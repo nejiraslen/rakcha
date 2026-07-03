@@ -410,7 +410,9 @@
         <input id="answerInput" type="text" placeholder="اكتب إجابتك هنا...">
       </div>
       <button id="submitAnswerBtn" class="btn full" onclick="submitAnswer()">إرسال الإجابة</button>
-      <button id="showAnswerBtn" class="btn ghost full" onclick="revealAnswer()">إظهار الإجابة</button>
+      <div id="waitingForAnswer" class="answer-feedback hidden" style="color:var(--ink-dim); font-weight:700;">
+        ⏳ في انتظار إجابة اللاعب الآخر...
+      </div>
       <div class="answer-feedback" id="answerFeedback"></div>
       <div id="answerBox" class="answer-box hidden">
         <div class="lbl">الإجابة الصحيحة</div>

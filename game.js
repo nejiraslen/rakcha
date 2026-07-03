@@ -213,13 +213,20 @@ function openOnlineQuestionModal(questionState){
   document.getElementById('answerInput').value = '';
   document.getElementById('answerFeedback').textContent = '';
   document.getElementById('answerBox').classList.add('hidden');
-  document.getElementById('showAnswerBtn').classList.remove('hidden');
-  if(questionState.revealed){
-    document.getElementById('answerBox').classList.remove('hidden');
-    document.getElementById('showAnswerBtn').classList.add('hidden');
+  document.getElementById('waitingForAnswer').classList.add('hidden');
+  // Determine if it's my turn
+  const isMyTurn = (myTeamIndex === turn && !questionState.stealActive) || (myTeamIndex !== turn && questionState.stealActive);
+  if(isMyTurn){
+    document.getElementById('answerInput').disabled = false;
+    document.getElementById('submitAnswerBtn').disabled = false;
+    document.getElementById('answerInput').style.opacity = '1';
+    document.getElementById('submitAnswerBtn').style.opacity = '1';
   } else {
-    document.getElementById('answerBox').classList.add('hidden');
-    document.getElementById('showAnswerBtn').classList.remove('hidden');
+    document.getElementById('answerInput').disabled = true;
+    document.getElementById('submitAnswerBtn').disabled = true;
+    document.getElementById('answerInput').style.opacity = '0.5';
+    document.getElementById('submitAnswerBtn').style.opacity = '0.5';
+    document.getElementById('waitingForAnswer').classList.remove('hidden');
   }
   document.getElementById('judgeWrap').classList.toggle('hidden', questionState.stealActive || !questionState.revealed);
   document.getElementById('stealWrap').classList.toggle('hidden', !questionState.stealActive);
@@ -241,6 +248,13 @@ function handleOnlineAnswerFeedback(feedback){
   if(feedback.correct && feedback.answer){
     document.getElementById('qAnswer').textContent = feedback.answer;
   }
+  // Auto-reveal answer and disable input
+  document.getElementById('answerBox').classList.remove('hidden');
+  document.getElementById('answerInput').disabled = true;
+  document.getElementById('submitAnswerBtn').disabled = true;
+  document.getElementById('answerInput').style.opacity = '0.5';
+  document.getElementById('submitAnswerBtn').style.opacity = '0.5';
+  document.getElementById('waitingForAnswer').classList.add('hidden');
 }
 
 function sendWs(payload){
@@ -503,6 +517,10 @@ function submitAnswer(){
   if(onlineMode){
     sendWs({ type:'submitAnswer', answer: guess });
     document.getElementById('answerFeedback').textContent = 'جاري التحقق...';
+    document.getElementById('answerInput').disabled = true;
+    document.getElementById('submitAnswerBtn').disabled = true;
+    document.getElementById('answerInput').style.opacity = '0.5';
+    document.getElementById('submitAnswerBtn').style.opacity = '0.5';
     return;
   }
   const {colIdx, qIdx} = currentCell;
